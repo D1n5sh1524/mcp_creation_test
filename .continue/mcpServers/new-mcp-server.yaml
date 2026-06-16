@@ -1,0 +1,5 @@
+mcpServers:
+  - name: ielts-booking
+    command: .venv/bin/python
+    args:
+      - backend/mcp_server.py

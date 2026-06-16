@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: ielts-booking-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ielts_booking}
+      POSTGRES_USER: ${POSTGRES_USER:-ielts}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ielts123}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ielts} -d ${POSTGRES_DB:-ielts_booking}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+
+volumes:
+  postgres_data:
+

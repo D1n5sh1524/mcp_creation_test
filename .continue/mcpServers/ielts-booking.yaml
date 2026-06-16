@@ -1,0 +1,17 @@
+name: IELTS Booking MCP
+version: 1.0.0
+schema: v1
+models:
+  - name: qwen3.5:9b
+    provider: ollama
+    model: qwen3.5:9b
+    roles:
+      - chat
+      - edit
+      - apply
+mcpServers:
+  - name: ielts-booking
+    command: .venv/bin/python
+    args:
+      - backend/mcp_server.py
+
