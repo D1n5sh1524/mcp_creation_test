@@ -70,6 +70,14 @@ The tools are:
 - `get_test_slot(slot_id)`
 - `book_test_slot(slot_id, candidate)`
 
+If you are connecting Continue to this server, the active workspace config is:
+
+```text
+.continue/mcpServers/new-mcp-server-1.yaml
+```
+
+For connection and usage details, see [HOW_IT_WORKS.md](./HOW_IT_WORKS.md).
+
 For a plain-English walkthrough of the repo, see [HOW_IT_WORKS.md](./HOW_IT_WORKS.md).
 
 ## Notes

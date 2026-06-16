@@ -158,6 +158,44 @@ Behavior is intentionally close to the HTTP app:
 
 That means you can use either the HTTP API or the MCP server and get the same underlying result.
 
+## How To Connect Continue To MCP
+
+If you are using Continue in VS Code, point Continue at the MCP server with a YAML config.
+In this repo, the working example is:
+
+```yaml
+mcpServers:
+  - name: ielts-booking
+    command: /Users/dineshkumar/Projects/mcp_creation_test/.venv/bin/python
+    args:
+      - /Users/dineshkumar/Projects/mcp_creation_test/backend/mcp_server.py
+```
+
+In this workspace, the config file currently used is:
+
+```text
+.continue/mcpServers/new-mcp-server-1.yaml
+```
+
+Connection steps:
+
+1. Save the MCP config in the active Continue config file.
+2. Restart Continue or reload VS Code.
+3. Make sure the server starts with the repo Python environment.
+4. Ask for a slot lookup or booking in natural language.
+
+Example prompts that should trigger the MCP tools:
+
+- get test details available in Bangalore
+- list test slots in Chennai on 2026-07-20
+- book the Bangalore academic slot for this candidate
+
+If Continue is connected correctly, it should call:
+
+- `list_test_slots`
+- `get_test_slot`
+- `book_test_slot`
+
 ## Startup Flow
 
 Typical local setup looks like this:
@@ -207,4 +245,3 @@ This repo gives you:
 - MCP tools: `backend/mcp_server.py`
 - migrations: `backend/migrations/versions`
 - run instructions: `README.md`
-
