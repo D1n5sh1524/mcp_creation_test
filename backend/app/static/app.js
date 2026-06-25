@@ -11,46 +11,7 @@ const resetChat = document.querySelector("#resetChat");
 
 let slots = [];
 let selectedSlot = null;
-let bookingDraft = {};
-let stepIndex = 0;
-
-const steps = [
-  {
-    key: "first_name",
-    prompt: "Great choice. What is your first name?",
-    placeholder: "First name",
-    validate: (value) => value.trim().length >= 2,
-    error: "Please enter at least 2 characters for your first name.",
-  },
-  {
-    key: "last_name",
-    prompt: "Thanks. What is your last name?",
-    placeholder: "Last name",
-    validate: (value) => value.trim().length >= 2,
-    error: "Please enter at least 2 characters for your last name.",
-  },
-  {
-    key: "email",
-    prompt: "What email should we use for the booking?",
-    placeholder: "you@example.com",
-    validate: (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()),
-    error: "Please enter a valid email address.",
-  },
-  {
-    key: "phone",
-    prompt: "What phone number should we attach to the booking?",
-    placeholder: "Phone number",
-    validate: (value) => value.trim().replace(/\D/g, "").length >= 7,
-    error: "Please enter a valid phone number.",
-  },
-  {
-    key: "passport_number",
-    prompt: "Last step: what is your passport number?",
-    placeholder: "Passport number",
-    validate: (value) => value.trim().length >= 5,
-    error: "Please enter a valid passport number.",
-  },
-];
+let chatSession = {};
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("en", {
@@ -70,6 +31,27 @@ function addMessage(text, sender = "bot", tone = "") {
   message.className = `message ${sender} ${tone}`.trim();
   message.textContent = text;
   messages.appendChild(message);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function addSlotSuggestions(suggestedSlots) {
+  if (!suggestedSlots?.length) {
+    return;
+  }
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "suggested-slots";
+
+  suggestedSlots.forEach((slot) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "suggested-slot";
+    button.textContent = `#${slot.id} ${slot.city} · ${slot.test_type} · ${formatDate(slot.test_date)} ${formatTime(slot.test_time)}`;
+    button.addEventListener("click", () => selectSlot(slot, true));
+    wrapper.appendChild(button);
+  });
+
+  messages.appendChild(wrapper);
   messages.scrollTop = messages.scrollHeight;
 }
 
@@ -98,6 +80,7 @@ function renderSlots() {
       <div>
         <h3>${slot.city} · ${slot.test_center_name}</h3>
         <div class="slot-meta">
+          <span class="pill">Slot #${slot.id}</span>
           <span class="pill">${slot.test_type}</span>
           <span class="pill">${formatDate(slot.test_date)}</span>
           <span class="pill">${formatTime(slot.test_time)}</span>
@@ -105,11 +88,11 @@ function renderSlots() {
         </div>
       </div>
       <button class="book-button" type="button" ${slot.available_seats <= 0 ? "disabled" : ""}>
-        ${slot.available_seats <= 0 ? "Full" : "Book"}
+        ${slot.available_seats <= 0 ? "Full" : "Chat book"}
       </button>
     `;
 
-    card.querySelector("button").addEventListener("click", () => selectSlot(slot));
+    card.querySelector("button").addEventListener("click", () => selectSlot(slot, true));
     slotList.appendChild(card);
   });
 }
@@ -129,37 +112,38 @@ function renderCities() {
   cityFilter.value = cities.includes(currentValue) ? currentValue : "";
 }
 
-function resetConversation(keepSlot = true) {
-  bookingDraft = {};
-  stepIndex = 0;
-  messages.innerHTML = "";
-
-  if (!keepSlot) {
-    selectedSlot = null;
-  }
-
+function updateSelectedSlot() {
   if (!selectedSlot) {
-    selectedSlotBox.textContent = "Select a slot to begin.";
-    chatInput.placeholder = "Choose a slot first";
-    chatInput.disabled = true;
-    sendButton.disabled = true;
-    addMessage("Pick any available test slot and I will guide you through the booking.");
+    selectedSlotBox.textContent = "Ask for available slots or select one from the list.";
     return;
   }
 
-  selectedSlotBox.textContent = `${selectedSlot.city}, ${selectedSlot.test_center_name} · ${selectedSlot.test_type} · ${formatDate(selectedSlot.test_date)} at ${formatTime(selectedSlot.test_time)}`;
-  chatInput.disabled = false;
-  sendButton.disabled = false;
-  chatInput.placeholder = steps[0].placeholder;
-  addMessage(steps[0].prompt);
-  chatInput.focus();
+  selectedSlotBox.textContent = `${selectedSlot.city}, ${selectedSlot.test_center_name} · Slot #${selectedSlot.id} · ${selectedSlot.test_type} · ${formatDate(selectedSlot.test_date)} at ${formatTime(selectedSlot.test_time)}`;
 }
 
-function selectSlot(slot) {
+function resetConversation() {
+  chatSession = {};
+  selectedSlot = null;
+  messages.innerHTML = "";
+  chatInput.disabled = false;
+  sendButton.disabled = false;
+  chatInput.placeholder = "Ask: show Chennai slots, or book slot #1...";
+  updateSelectedSlot();
+  addMessage("Hi. I can search IELTS slots and book one through the MCP booking tools. Try “show available slots in Chennai” or pick a slot card.");
+}
+
+function selectSlot(slot, announce = false) {
   selectedSlot = slot;
+  chatSession.slot_id = slot.id;
+  updateSelectedSlot();
   renderSlots();
-  resetConversation(true);
+
+  if (announce) {
+    addMessage(`Selected slot #${slot.id}. Send your name, email, phone, and passport number when you are ready to book.`);
+  }
+
   document.querySelector("#booking-chat").scrollIntoView({ behavior: "smooth", block: "start" });
+  chatInput.focus();
 }
 
 async function loadSlots() {
@@ -179,70 +163,59 @@ async function loadSlots() {
   }
 }
 
-async function submitBooking() {
+async function sendChatMessage(text) {
   chatInput.disabled = true;
   sendButton.disabled = true;
-  addMessage("Creating your booking now...");
 
   try {
-    const response = await fetch("/bookings", {
+    const response = await fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        slot_id: selectedSlot.id,
-        candidate: bookingDraft,
+        message: text,
+        session: chatSession,
+        selected_slot_id: selectedSlot?.id || null,
       }),
     });
 
     const payload = await response.json();
     if (!response.ok) {
-      throw new Error(payload.detail || "Booking failed");
+      throw new Error(payload.detail || "Chat request failed");
     }
 
-    addMessage(
-      `Booked. Your reference is ${payload.booking.booking_reference}. Remaining seats for this slot: ${payload.slot_remaining_seats}.`,
-      "bot",
-      "success",
-    );
-    await loadSlots();
+    chatSession = payload.session || {};
+    addMessage(payload.reply, "bot", payload.booking ? "success" : "");
+    addSlotSuggestions(payload.slots);
+
+    if (payload.booking) {
+      await loadSlots();
+    }
   } catch (error) {
-    addMessage(`${error.message}. You can reset the chat and try again.`);
+    addMessage(`${error.message}. Check that the API, database, and local model settings are running.`);
+  } finally {
+    chatInput.disabled = false;
+    sendButton.disabled = false;
+    chatInput.focus();
   }
 }
 
 chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const text = chatInput.value.trim();
 
-  if (!selectedSlot || stepIndex >= steps.length) {
+  if (!text) {
     return;
   }
 
-  const step = steps[stepIndex];
-  const value = chatInput.value.trim();
-
-  if (!step.validate(value)) {
-    addMessage(step.error);
-    return;
-  }
-
-  bookingDraft[step.key] = value;
-  addMessage(value, "user");
+  addMessage(text, "user");
   chatInput.value = "";
-  stepIndex += 1;
-
-  if (stepIndex >= steps.length) {
-    await submitBooking();
-    return;
-  }
-
-  chatInput.placeholder = steps[stepIndex].placeholder;
-  addMessage(steps[stepIndex].prompt);
+  await sendChatMessage(text);
 });
 
 cityFilter.addEventListener("change", renderSlots);
 typeFilter.addEventListener("change", renderSlots);
 refreshSlots.addEventListener("click", loadSlots);
-resetChat.addEventListener("click", () => resetConversation(Boolean(selectedSlot)));
+resetChat.addEventListener("click", resetConversation);
 
-resetConversation(false);
+resetConversation();
 loadSlots();

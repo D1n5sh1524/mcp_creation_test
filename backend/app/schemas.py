@@ -50,3 +50,21 @@ class BookingCreateResponse(BaseModel):
     slot_remaining_seats: int
 
     model_config = {"from_attributes": True}
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    message: str
+    session: dict = {}
+    selected_slot_id: int | None = None
+
+
+class ChatResponse(BaseModel):
+    reply: str
+    session: dict
+    slots: list[dict] | None = None
+    booking: dict | None = None

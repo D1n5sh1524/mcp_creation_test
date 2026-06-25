@@ -7,9 +7,10 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
+from app.chat import handle_booking_chat
 from app.db.database import get_db
 from app.db.models import Booking, Candidate, TestSlot
-from app.schemas import BookingCreate, BookingCreateResponse, TestSlotRead
+from app.schemas import BookingCreate, BookingCreateResponse, ChatRequest, ChatResponse, TestSlotRead
 
 app = FastAPI(title="IELTS Booking API", version="0.1.0")
 
@@ -78,4 +79,13 @@ def create_booking(payload: BookingCreate, db: Session = Depends(get_db)) -> Boo
         booking=booking,
         candidate_created=candidate_created,
         slot_remaining_seats=slot.available_seats,
+    )
+
+
+@app.post("/chat", response_model=ChatResponse)
+def chat(payload: ChatRequest) -> dict:
+    return handle_booking_chat(
+        message=payload.message,
+        session=payload.session,
+        selected_slot_id=payload.selected_slot_id,
     )

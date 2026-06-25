@@ -395,6 +395,24 @@ input:focus {
   background: #dcfce7;
 }
 
+.suggested-slots {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 520px);
+}
+
+.suggested-slot {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--primary-strong);
+  background: #fff;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
 .chat-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
