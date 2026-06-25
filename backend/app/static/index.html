@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Book IELTS Academic and General test slots with a simple chat booking assistant."
+    />
+    <title>IELTS Test Booking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="eyebrow">IELTS slot booking</p>
+          <h1 id="page-title">Choose a test date, then book it through chat.</h1>
+          <p class="intro">
+            Browse available IELTS Academic and General sessions, pick a center, and let the assistant collect the details needed to reserve your seat.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-link" href="#booking-chat">Start booking</a>
+            <a class="secondary-link" href="#slots">View slots</a>
+          </div>
+        </div>
+        <div class="hero-visual" aria-label="IELTS booking dashboard preview">
+          <div class="passport-card">
+            <span class="stamp">Ready</span>
+            <strong>Band goals start here</strong>
+            <small>Verified centers, live seat counts, fast booking references.</small>
+          </div>
+          <div class="calendar-card">
+            <span>20</span>
+            <small>Jul 2026</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel slots-panel" id="slots" aria-labelledby="slots-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Live availability</p>
+              <h2 id="slots-title">Available test slots</h2>
+            </div>
+            <button class="icon-button" id="refreshSlots" type="button" title="Refresh slots" aria-label="Refresh slots">
+              <span aria-hidden="true">↻</span>
+            </button>
+          </div>
+
+          <div class="filters" aria-label="Slot filters">
+            <label>
+              City
+              <select id="cityFilter">
+                <option value="">All cities</option>
+              </select>
+            </label>
+            <label>
+              Test type
+              <select id="typeFilter">
+                <option value="">All types</option>
+                <option value="Academic">Academic</option>
+                <option value="General">General</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="slot-list" id="slotList" aria-live="polite"></div>
+        </section>
+
+        <section class="panel chat-panel" id="booking-chat" aria-labelledby="chat-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Chat booking</p>
+              <h2 id="chat-title">Booking assistant</h2>
+            </div>
+            <button class="text-button" id="resetChat" type="button">Reset</button>
+          </div>
+
+          <div class="selected-slot" id="selectedSlot">
+            Select a slot to begin.
+          </div>
+
+          <div class="messages" id="messages" aria-live="polite"></div>
+
+          <form class="chat-form" id="chatForm">
+            <input id="chatInput" type="text" autocomplete="off" placeholder="Choose a slot first" disabled />
+            <button id="sendButton" type="submit" disabled>Send</button>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
